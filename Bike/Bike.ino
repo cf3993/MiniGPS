@@ -25,6 +25,8 @@ int x1, y1, z1, x2, y2, z2;     // Trigger values of Accelerometer
 int firstrun;
 int alarmTrigger = 999;	// Send this to BaseStation to sound alarm
 int led = 14;
+int trigFlag = 0; // If value is exceeded 5 times, trigger alarm... Stops random alarm triggers
+int btPwr = 12;   // Turn off HC-05 module until needed. Saves battery and stops interference with ADXL355
 
 void setup()
 {
@@ -32,6 +34,7 @@ void setup()
   pinMode(2, INPUT);
   pinMode(14, OUTPUT);
   pinMode(12, OUTPUT);
+  digitalWrite(btPwr, LOW);
 
   // RESET EEPROM AND ALL PREVIOUS SETTINGS!!!
   int resetState = digitalRead(2);
@@ -52,40 +55,61 @@ void setup()
 
 void loop()
 {
-  delay(500);
   // Flash LED to show that alarm is armed
+  digitalWrite(13, HIGH);
+  delay(100);
+  digitalWrite(13, LOW);
+  delay(500);
   Serial.println("");
   btSerial.println("Parked...");
   // Read data from accelerometer
-  x = analogRead(15);
-  y = analogRead(16);
-  //z = analogRead(17)/2;
-  btSerial.println(x);
-  delay(5);
-  btSerial.println(y);
-  delay(5);
-  btSerial.println(z);
-  delay(5);
-  Serial.println(x);
-  delay(5);
-  Serial.println(y);
-  delay(5);
-  Serial.println(z);
-  delay(5);
-  if (x > x1) {
-    Alarm();
-  }
-  delay(2);
-  if (x < x2) {
-    Alarm();
-  }
-  delay(2);
-  if (y > y1) {
-    Alarm();
-  }
-  delay(2);
-  if (y < y2) {
-    Alarm();
+  for (int n = 0; n < 20; n++)
+  {
+    x = analogRead(15);
+    y = analogRead(16);
+    //z = analogRead(17)/2;
+    //btSerial.println(x);
+    delay(5);
+    //btSerial.println(y);
+    delay(5);
+    //btSerial.println(z);
+    delay(5);
+    Serial.println(x);
+    delay(5);
+    Serial.println(y);
+    delay(5);
+    Serial.println(z);
+    delay(5);
+    Serial.println(trigFlag);
+    if (x > x1) {
+      trigFlag++;
+      if (trigFlag > 10) {
+        Alarm();
+      }
+    }
+    else if (x < x2) {
+      trigFlag++;
+      if (trigFlag > 10) {
+        Alarm();
+      }
+    }
+    if (y > y1) {
+      trigFlag++;
+      if (trigFlag > 10) {
+        Alarm();
+      }
+    }
+    else if (y < y2) {
+      trigFlag++;
+      if (trigFlag > 10) {
+        Alarm();
+      }
+    }
+
+    if (x < x1 && x > x2)
+    {
+      trigFlag = 0;
+    }
   }
 }
 
@@ -104,8 +128,8 @@ void firstRun()
 
   // If none, then perform firstRun()
   // ======
-  // Wait 10 seconds for bike to settle (Parked)
-  soundBuzzer(500, 500, 10);
+  // Wait 10 seconds for bike to settle (Parked) // 2 FOR DEBUGGING
+  soundBuzzer(500, 500, 2);
   // Buzz each second for 10 second delay
   // Read X, Y, Z data from Accelerometer
   // Write these values to EERPOM Position 1, 2, 3 respectively
@@ -149,6 +173,7 @@ void soundBuzzer(int on, int off, int count)
 
 void Alarm()	// Send alarm signal to BaseStation
 {
+  digitalWrite(btPwr, HIGH);
   if (btSerial.available())
   {
     Serial.write("Yeah we got BT..");
