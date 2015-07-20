@@ -30,9 +30,9 @@ int x, y, FS;
 boolean monitored = false;
 boolean trigger = false;		// Initialise alarm as untriggered
 boolean bikefound = false;	// Search for bike on each power up
-int alarmTrigger = 9;				// Trigger alarm if this is received
+#define alarmTrigger 999				// Trigger alarm if this is received
 int recvByte;
-int buzzer = 13;						// Buzzer pin
+#define buzzer 13 						// Buzzer pin
 
 void setup()
 {
@@ -50,6 +50,9 @@ void setup()
   delay(1000);
   displayText("Checking Buzzer...", 0, 0, 1, true);
   soundBuzzer(200, 100, 3, false);
+  displayText("MiniGPS", 0, 0, 2, true);
+  displayText("BaseStation V1.0", 0, 20, 1, false);
+  displayText("System OK... :)", 0, 30, 1, false);
   delay(1000);
 }
 
@@ -58,18 +61,18 @@ void loop()
   Serial.println("ENTERED THE LOOP...");
   if (btSerial.available())
   {
-    Serial.println(btSerial.read());
+    recvByte = btSerial.read();
     Serial.println("GOT BT SERIAL M8");
     digitalWrite(buzzer, HIGH);
     delay(100);
-    if (recvByte == alarmTrigger)
-    { 
+//    if (recvByte == alarmTrigger)
+//   { 
       alertTriggered();
-    }
+//    }
     digitalWrite(buzzer, LOW);
     delay(300);
   }
-  delay(500);
+  delay(100);
 }
 
 void displayText(String text, int x, int y, int FS, bool clearScreen)
@@ -90,6 +93,7 @@ void displayText(String text, int x, int y, int FS, bool clearScreen)
 
 void alertTriggered()	//Go nuts!
 {
+  displayText("OIOI", 0, 0, 3, true);
   while (trigger == true)
   {
     soundBuzzer(200, 100, 10, true);

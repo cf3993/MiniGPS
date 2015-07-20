@@ -19,14 +19,16 @@
 // Set up Global Variables (Keep these to a minimum to save memory!
 SoftwareSerial btSerial(11, 10); //(RX, TX)
 boolean bikeParked;
-int buzzer = 13; 	// CHANGE ACCORDING TO CIRCUIT LAYOUT!
 int x, y, z;			// Accelerometer Axis
 int x1, y1, z1, x2, y2, z2;     // Trigger values of Accelerometer
 int firstrun;
-int alarmTrigger = 999;	// Send this to BaseStation to sound alarm
-int led = 14;
 int trigFlag = 0; // If value is exceeded 5 times, trigger alarm... Stops random alarm triggers
-int btPwr = 12;   // Turn off HC-05 module until needed. Saves battery and stops interference with ADXL355
+bool alarm;
+
+#define buzzer 13   // CHANGE ACCORDING TO CIRCUIT LAYOUT!
+#define alarmTrigger 999	// Send this to BaseStation to sound alarm
+#define led 14
+#define btPwr 12   // Turn off HC-05 module until needed. Saves battery and stops interference with ADXL355
 
 void setup()
 {
@@ -129,7 +131,7 @@ void firstRun()
   // If none, then perform firstRun()
   // ======
   // Wait 10 seconds for bike to settle (Parked) // 2 FOR DEBUGGING
-  soundBuzzer(500, 500, 2);
+  soundBuzzer(500, 500, 10, false);
   // Buzz each second for 10 second delay
   // Read X, Y, Z data from Accelerometer
   // Write these values to EERPOM Position 1, 2, 3 respectively
@@ -152,16 +154,20 @@ void writePosition()
   delay(10);
   //EEPROM.write(z, 3);
   delay(10);
-  soundBuzzer(2000, 0, 1);
+  soundBuzzer(2000, 0, 1, false);
   Serial.println(x);
   Serial.println(x1);
   Serial.println(x2);
 }
 
-void soundBuzzer(int on, int off, int count)
+void soundBuzzer(int on, int off, int count, bool alarm)
 {
   for (int c = 0; c < count; c++)
   {
+    if (alarm == true)
+    {
+      btSerial.println(alarmTrigger);
+    }
     digitalWrite(led, HIGH);
     digitalWrite(buzzer, HIGH);
     delay(on);
@@ -174,21 +180,17 @@ void soundBuzzer(int on, int off, int count)
 void Alarm()	// Send alarm signal to BaseStation
 {
   digitalWrite(btPwr, HIGH);
-  if (btSerial.available())
-  {
-    Serial.write("Yeah we got BT..");
-    btSerial.write(alarmTrigger);
-  }
+  Serial.write(btSerial.println(999));
   delay(1000);
-  soundBuzzer(400, 100, 1000);
+  soundBuzzer(400, 100, 1000, true);
 }
 
 void __RESET__() {
   digitalWrite(led, HIGH);
-  soundBuzzer(5000, 0, 1);
+  soundBuzzer(5000, 0, 1, false);
   for ( int i = 0 ; i < EEPROM.length() ; i++ )
     EEPROM.write(i, 0);
-  soundBuzzer(2000, 0, 1);
+  soundBuzzer(2000, 0, 1, false);
   digitalWrite(led, LOW);
   delay(60000);
 }
