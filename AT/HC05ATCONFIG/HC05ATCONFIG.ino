@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
 
-SoftwareSerial BTSerial(10, 11); // RX | TX
+SoftwareSerial BTSerial(11, 10); // RX | TX
 
 void setup()
 {
