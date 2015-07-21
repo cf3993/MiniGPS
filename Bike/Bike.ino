@@ -180,7 +180,8 @@ void soundBuzzer(int on, int off, int count, bool alarm)
 void Alarm()	// Send alarm signal to BaseStation
 {
   digitalWrite(btPwr, HIGH);
-  Serial.write(btSerial.println(999));
+  Serial.write(btSerial.println(alarmTrigger));
+  btSerial.write(alarmTrigger);
   delay(1000);
   soundBuzzer(400, 100, 1000, true);
 }
